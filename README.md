@@ -30,6 +30,14 @@ Sunshine!
 
 ---
 
+## 🙏 鸣谢
+
+感谢 **北京合众恒跃科技有限公司** (HZHY Technology Co., Ltd.) 赠送一块开发板用于本项目开发与测试。
+
+![HZHY](doc/hzyh.png)
+
+---
+
 ## Download
 
 Built firmware images are available for many architectures and come with a
