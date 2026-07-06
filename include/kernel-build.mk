@@ -40,6 +40,7 @@ endef
 define Download/kernel
   URL:=$(LINUX_SITE)
   FILE:=$(LINUX_SOURCE)
+	URL_FILE:=$(LINUX_SOURCE_URL_FILE)
   HASH:=$(LINUX_KERNEL_HASH)
 endef
 

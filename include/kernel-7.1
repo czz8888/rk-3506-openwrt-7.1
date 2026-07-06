@@ -1,5 +1,8 @@
 LINUX_VERSION-7.1 =
-LINUX_KERNEL_HASH-7.1 = bb86ca755488a507353f685a8f7b9ed47a88bd0054913d61a191b706f275215d
+LINUX_SOURCE-7.1 = linux-7.1.tar.gz
+LINUX_SOURCE_URL_FILE-7.1 = v7.1.tar.gz
+LINUX_SITE-7.1 = https://github.com/torvalds/linux/archive/refs/tags
+LINUX_KERNEL_HASH-7.1 = ad7f8010a17ecd9959c79cba639dfbbc9dccbbfb7323c5f1d04421368939f18f
 
 # Kernel v7.1 from linux-stable, used by rk-forge project:
 # https://github.com/Awesome-Embedded-Learning-Studio/rk-forge
@@ -8,9 +11,12 @@ LINUX_KERNEL_HASH-7.1 = bb86ca755488a507353f685a8f7b9ed47a88bd0054913d61a191b706
 # RK3506 SoC support (pinctrl, clk) is mainlined since Linux 6.19.
 # Board-level DT and driver patches come from rk-forge's patches/linux/.
 #
-# Tarball generated from shallow git clone:
+# Tarball fetched from GitHub tag archive (returns linux-7.1.tar.gz):
+#   https://github.com/torvalds/linux/archive/refs/tags/v7.1
+#
+# Equivalent reproducible source from shallow git clone:
 #   git clone --depth 1 --branch v7.1 \
 #     https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
 #     dl/linux-7.1
 #   cd dl/linux-7.1
-#   git archive --format=tar --prefix=linux-7.1/ v7.1 | xz -0 > ../linux-7.1.tar.xz
+#   git archive --format=tar --prefix=linux-7.1/ v7.1 | gzip -n > ../linux-7.1.tar.gz

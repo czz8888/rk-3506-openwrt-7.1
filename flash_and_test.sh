@@ -4,9 +4,20 @@
 
 set -e
 
-OPENWRT_DIR="/home/cheche/rk-openwrt-7.1"
+# Resolve workspace path from script location instead of quoted '~'.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+OPENWRT_DIR="${OPENWRT_DIR:-${SCRIPT_DIR}}"
+
 LOADER="${OPENWRT_DIR}/rk3506_spl_loader_v1.04.110.bin"
 EMMC_IMG="${OPENWRT_DIR}/bin/targets/rockchip/rk3506/openwrt-rockchip-rk3506-hzhy_mini_evm_emmc-squashfs-emmc.img"
+
+# Fallback: pick a matching RK3506 SPL loader in repo root when version changes.
+if [ ! -f "${LOADER}" ]; then
+    LOADER_CANDIDATE="$(find "${OPENWRT_DIR}" -maxdepth 1 -type f -name 'rk3506_spl_loader_v*.bin' | sort | tail -n 1)"
+    if [ -n "${LOADER_CANDIDATE}" ]; then
+        LOADER="${LOADER_CANDIDATE}"
+    fi
+fi
 
 echo "============================================"
 echo " HZ-RK3506SP MiniEVM 刷机脚本"

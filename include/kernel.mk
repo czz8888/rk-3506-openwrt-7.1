@@ -70,6 +70,10 @@ else
       LINUX_UNAME_VERSION:=$(strip $(shell cat $(LINUX_DIR)/include/config/kernel.release 2>/dev/null))
   endif
 
+    LINUX_SOURCE:=$(if $(LINUX_SOURCE-$(strip $(LINUX_VERSION))),$(LINUX_SOURCE-$(strip $(LINUX_VERSION))),$(LINUX_SOURCE))
+    LINUX_SOURCE_URL_FILE:=$(if $(LINUX_SOURCE_URL_FILE-$(strip $(LINUX_VERSION))),$(LINUX_SOURCE_URL_FILE-$(strip $(LINUX_VERSION))),$(LINUX_SOURCE))
+    LINUX_SITE:=$(if $(LINUX_SITE-$(strip $(LINUX_VERSION))),$(LINUX_SITE-$(strip $(LINUX_VERSION))),$(LINUX_SITE))
+
   MODULES_SUBDIR:=lib/modules/$(LINUX_UNAME_VERSION)
   TARGET_MODULES_DIR:=$(LINUX_TARGET_DIR)/$(MODULES_SUBDIR)
 

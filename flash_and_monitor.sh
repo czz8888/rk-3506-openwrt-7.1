@@ -4,7 +4,7 @@
 
 set -e
 PASS="YOUR_SUDO_PASSWORD"
-OPENWRT_DIR="/home/cheche/rk-openwrt-7.1"
+OPENWRT_DIR="~/rk-3506-openwrt-7.1"
 LOADER="${OPENWRT_DIR}/rk3506_spl_loader_v1.04.110.bin"
 EMMC_IMG="${OPENWRT_DIR}/bin/targets/rockchip/rk3506/openwrt-rockchip-rk3506-hzhy_mini_evm_emmc-squashfs-emmc.img"
 SERIAL="/dev/ttyUSB0"
