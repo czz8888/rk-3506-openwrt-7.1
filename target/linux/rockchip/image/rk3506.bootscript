@@ -1,0 +1,25 @@
+part uuid mmc ${devnum}:2 uuid
+
+setenv bootargs "console=ttyS0,1500000 earlycon=uart8250,mmio32,0xff0a0000 earlyprintk loglevel=8 ignore_loglevel fw_devlink=off root=PARTUUID=${uuid} rw rootwait"
+
+# --- RK3506 boot-memory diagnostics -------------------------------------
+# The kernel dies with a "Bad page state ... pfn:0631e" Oops during
+# memblock_free_all(), i.e. before its own "Memory: xxxK/xxxK available"
+# line is ever printed, so the DRAM geometry the kernel accepted cannot be
+# read from the kernel log.  Emit it here instead: bdinfo prints the DRAM
+# bank base/size that U-Boot hands to the kernel (this base must be 0 to
+# match the kernel PHYS_OFFSET), the effective FIT load addresses, and the
+# /memory node of the control FDT that gets fixed up into the kernel DT.
+# Each probe is guarded so a missing command never aborts the real boot.
+echo "=== RK3506 boot diagnostics: DRAM banks (base must be 0) ==="
+if bdinfo; then true; fi
+echo "=== RK3506 boot diagnostics: effective load addresses ==="
+if printenv kernel_addr_r kernel_addr_c fdt_addr_r ramdisk_addr_r; then true; fi
+echo "=== RK3506 boot diagnostics: control-FDT /memory node ==="
+if fdt addr ${fdtcontroladdr}; then fdt print /memory; fi
+echo "=== RK3506 boot diagnostics: end ==="
+# ------------------------------------------------------------------------
+
+load mmc ${devnum}:1 ${kernel_addr_r} kernel.img
+
+bootm ${kernel_addr_r} -

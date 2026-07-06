@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: HZHY Device Tree Port <dev@hzhy.com>
+Date: Sat, 05 Jul 2026 00:00:00 +0800
+Subject: [PATCH] ARM: dts: rockchip: Makefile: add HZHY MiniEVM SP DTS
+
+Add the HZ-RK3506SP MiniEVM board device trees to the build.
+Signed-off-by: HZHY Device Tree Port <dev@hzhy.com>
+---
+ arch/arm/boot/dts/rockchip/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/rockchip/Makefile b/arch/arm/boot/dts/rockchip/Makefile
+--- a/arch/arm/boot/dts/rockchip/Makefile
++++ b/arch/arm/boot/dts/rockchip/Makefile
+@@ -46,3 +46,6 @@
+ 	rk3288-veyron-tiger.dtb \
+ 	rk3288-vyasa.dtb \
+ 	rk3506b-aes.dtb \
++	HZ-RK3506SP_MiniEVM_EMMC.dtb \
++	HZ-RK3506SP_MiniEVM_NAND.dtb \
++	HZ-RK3506SP_MiniEVM_TF.dtb

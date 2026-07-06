@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# RK3506 network configuration
+#
+
+. /lib/functions/uci-defaults.sh
+. /lib/functions/system.sh
+
+board_config_update
+
+case "$(board_name)" in
+	hzhy,rk3506sp-mini-evm|\
+	hzhy,rk3506sp-mini-evm-emmc|\
+	hzhy,rk3506sp-mini-evm-nand)
+		ucidef_set_interfaces_lan_wan "eth1" "eth0"
+		;;
+esac
+
+board_config_flush
+
+exit 0

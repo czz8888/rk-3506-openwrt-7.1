@@ -1,0 +1,16 @@
+LINUX_VERSION-7.1 =
+LINUX_KERNEL_HASH-7.1 = bb86ca755488a507353f685a8f7b9ed47a88bd0054913d61a191b706f275215d
+
+# Kernel v7.1 from linux-stable, used by rk-forge project:
+# https://github.com/Awesome-Embedded-Learning-Studio/rk-forge
+# Tag: v7.1  Commit: 8cd9520d3 (2026-06-15)
+#
+# RK3506 SoC support (pinctrl, clk) is mainlined since Linux 6.19.
+# Board-level DT and driver patches come from rk-forge's patches/linux/.
+#
+# Tarball generated from shallow git clone:
+#   git clone --depth 1 --branch v7.1 \
+#     https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+#     dl/linux-7.1
+#   cd dl/linux-7.1
+#   git archive --format=tar --prefix=linux-7.1/ v7.1 | xz -0 > ../linux-7.1.tar.xz

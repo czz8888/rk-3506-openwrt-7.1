@@ -1,0 +1,145 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: HZHY Device Tree Port <dev@hzhy.com>
+Date: Sat, 05 Jul 2026 00:00:00 +0800
+Subject: [PATCH] ARM: dts: rockchip: rk3506: add uart1/uart3 + HZHY RMIO pins
+
+Add SoC nodes for UART1 and UART3 (needed by HZ-RK3506SP MiniEVM for
+RS485_0 and Beidou), plus the full set of RMIO crossbar pin groups used
+by the HZHY MiniEVM board family.
+
+Signed-off-by: HZHY Device Tree Port <dev@hzhy.com>
+---
+--- a/arch/arm/boot/dts/rockchip/rk3506.dtsi
++++ b/arch/arm/boot/dts/rockchip/rk3506.dtsi
+@@ -128,6 +128,18 @@
+ 		pinctrl-0 = <&uart0_xfer_pins>;
+ 		status = "disabled";
+ 	};
++	uart1: serial@ff0b0000 {
++		compatible = "rockchip,rk3506-uart", "snps,dw-apb-uart";
++		reg = <0xff0b0000 0x100>;
++		interrupts = <GIC_SPI 35 IRQ_TYPE_LEVEL_HIGH>;
++		reg-shift = <2>;
++		reg-io-width = <4>;
++		clocks = <&cru SCLK_UART1>, <&cru PCLK_UART1>;
++		clock-names = "baudclk", "apb_pclk";
++		pinctrl-names = "default";
++		status = "disabled";
++	};
++
+ 
+ 	spi0: spi@ff120000 {
+ 		compatible = "rockchip,rk3506-spi", "rockchip,rk3066-spi";
+@@ -187,6 +199,18 @@
+ 		status = "disabled";
+ 	};
+ 
++	uart3: serial@ff0d0000 {
++		compatible = "rockchip,rk3506-uart", "snps,dw-apb-uart";
++		reg = <0xff0d0000 0x100>;
++		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
++		reg-shift = <2>;
++		reg-io-width = <4>;
++		clocks = <&cru SCLK_UART3>, <&cru PCLK_UART3>;
++		clock-names = "baudclk", "apb_pclk";
++		pinctrl-names = "default";
++		status = "disabled";
++	};
++
+ 	dmac0: dma-controller@ff000000 {
+ 		compatible = "arm,pl330", "arm,primecell";
+ 		reg = <0xff000000 0x4000>;
+@@ -773,4 +797,93 @@
+ 			};
+ 		};
+ 	};
++		/*
++		 * HZHY MiniEVM RMIO pin groups — additional mappings beyond the
++		 * AES reference set. /omit-if-no-ref/ guarded; no conflict with
++		 * existing groups (different pad/function combinations).
++		 */
++		i2c0_hzhy {
++			/omit-if-no-ref/
++			rm_io25_i2c0_sda: rm-io25-i2c0-sda {
++				rockchip,pins = <1 RK_PB2 32 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io26_i2c0_scl: rm-io26-i2c0-scl {
++				rockchip,pins = <1 RK_PB3 33 &pcfg_pull_none>;
++			};
++		};
++		i2c1_hzhy {
++			/omit-if-no-ref/
++			rm_io27_i2c1_sda: rm-io27-i2c1-sda {
++				rockchip,pins = <1 RK_PC2 33 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io28_i2c1_scl: rm-io28-i2c1-scl {
++				rockchip,pins = <1 RK_PC3 34 &pcfg_pull_none>;
++			};
++		};
++		uart1_hzhy {
++			/omit-if-no-ref/
++			rm_io0_uart1_rx: rm-io0-uart1-rx {
++				rockchip,pins = <0 RK_PA0 17 &pcfg_pull_up>;
++			};
++			/omit-if-no-ref/
++			rm_io2_uart1_tx: rm-io2-uart1-tx {
++				rockchip,pins = <0 RK_PA2 16 &pcfg_pull_none>;
++			};
++		};
++		uart2_hzhy {
++			/omit-if-no-ref/
++			rm_io16_uart2_rx: rm-io16-uart2-rx {
++				rockchip,pins = <0 RK_PC0 19 &pcfg_pull_up>;
++			};
++			/omit-if-no-ref/
++			rm_io17_uart2_tx: rm-io17-uart2-tx {
++				rockchip,pins = <0 RK_PC1 18 &pcfg_pull_none>;
++			};
++		};
++		uart3_hzhy {
++			/omit-if-no-ref/
++			rm_io14_uart3_tx: rm-io14-uart3-tx {
++				rockchip,pins = <0 RK_PB6 18 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io15_uart3_rx: rm-io15-uart3-rx {
++				rockchip,pins = <0 RK_PB7 19 &pcfg_pull_up>;
++			};
++		};
++		spi0_hzhy {
++			/omit-if-no-ref/
++			rm_io13_spi0_csn0: rm-io13-spi0-csn0 {
++				rockchip,pins = <0 RK_PB5 14 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io14_spi0_clk: rm-io14-spi0-clk {
++				rockchip,pins = <0 RK_PB6 14 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io15_spi0_csn1: rm-io15-spi0-csn1 {
++				rockchip,pins = <0 RK_PB7 14 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io16_spi0_miso: rm-io16-spi0-miso {
++				rockchip,pins = <0 RK_PC0 14 &pcfg_pull_none>;
++			};
++			/omit-if-no-ref/
++			rm_io17_spi0_mosi: rm-io17-spi0-mosi {
++				rockchip,pins = <0 RK_PC1 14 &pcfg_pull_none>;
++			};
++		};
++		mclk_hzhy {
++			/omit-if-no-ref/
++			rm_io8_sai1_mclk: rm-io8-sai1-mclk {
++				rockchip,pins = <0 RK_PB0 1 &pcfg_pull_none>;
++			};
++		};
++		pwm0_ch3_hzhy {
++			/omit-if-no-ref/
++			rm_io6_pwm0_ch3: rm-io6-pwm0-ch3 {
++				rockchip,pins = <0 RK_PA6 4 &pcfg_pull_none>;
++			};
++		};
+ };

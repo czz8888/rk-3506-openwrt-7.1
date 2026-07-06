@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 HZHY Electronics Co., Ltd.
+ * HZ-RK3506SP MiniEVM — SPI-NAND boot variant (SD card slot).
+ */
+
+/dts-v1/;
+
+#include "HZ-RK3506SP_MiniEVM.dtsi"
+#include "HZ-RK3506SP_MiniEVM_HDMI.dtsi"
+
+/ {
+	model = "HZ-RK3506SP_MiniEVM NAND";
+	compatible = "rockchip,rk3506-evb1-v10", "rockchip,rk3506";
+	chosen {
+		bootargs = "earlycon=uart8250,mmio32,0xff0a0000 console=ttyS0,1500000 ubi.mtd=5 root=ubi0:rootfs rw rootfstype=ubifs rootwait net.ifnames=0";
+	};
+	/delete-node/ sdio-pwrseq;
+	vcc_3v3: vcc-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_3v3";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vcc_sys>;
+	};
+	vccio_sd: vccio-sd-regulator {
+		compatible = "regulator-gpio";
+		regulator-name = "vccio-sd-regulator";
+		gpio = <&gpio4 RK_PB2 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vccio_sd_gpio>;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		gpios-states = <0>;
+		states = <3300000 0x1>, <1800000 0x0>;
+	};
+};
+
+&sfc {
+	status = "okay";
+	flash@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <1>;
+	};
+};
+
+&mmc {
+	/delete-property/ no-sd;
+	/delete-property/ ignore-pm-notify;
+	/delete-property/ keep-power-in-suspend;
+	/delete-property/ non-removable;
+	/delete-property/ mmc-pwrseq;
+	cap-mmc-highspeed;
+	cap-sd-highspeed;
+	sd-uhs-sdr104;
+	bus-width = <4>;
+	no-sdio;
+	no-mmc;
+	cd-gpios = <&gpio1 RK_PA3 GPIO_ACTIVE_LOW>;
+	disable-wp;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc_clk_pins &sdmmc_cmd_pins &sdmmc_bus4_pins &sd_det>;
+	vmmc-supply = <&vcc_3v3>;
+	vqmmc-supply = <&vccio_sd>;
+	status = "okay";
+};
+
+&pinctrl {
+	sdmmc {
+		vccio_sd_gpio: vccio-sd-gpio {
+			rockchip,pins = <4 RK_PB2 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+		sd_det: sd-det {
+			rockchip,pins = <1 RK_PA3 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+};
