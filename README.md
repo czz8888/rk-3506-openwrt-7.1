@@ -11,6 +11,25 @@ full customization, to use the device in ways never envisioned.
 
 Sunshine!
 
+---
+
+## 🔧 Rockchip RK3506 支持（测试阶段）
+
+> ⚠️ 本仓库是 **第一份** 基于 OpenWrt 的 RK3506 构建尝试，当前处于**早期测试阶段**，尚不完善，不可用于生产环境。
+
+### 支持的设备
+
+| SoC | 设备 | 状态 |
+|-----|------|------|
+| RK3506 (32位 ARM Cortex-A7) | HZ-RK3506SP MiniEVM (EMMC) | 🧪 测试中 |
+| RK3506 (32位 ARM Cortex-A7) | HZ-RK3506SP MiniEVM (NAND) | 🧪 测试中 |
+| RK3506 (32位 ARM Cortex-A7) | Luckfox Lyra Pi W | 🔲 待适配 |
+| RK3506 (32位 ARM Cortex-A7) | ArmSoM Forge1 | 🔲 待适配 |
+
+> 详细说明请参见 [target/linux/rockchip/rk3506/README.md](target/linux/rockchip/rk3506/README.md)
+
+---
+
 ## Download
 
 Built firmware images are available for many architectures and come with a
