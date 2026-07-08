@@ -9,9 +9,9 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/rockchip-linux/rkbin.git
-PKG_SOURCE_DATE:=2024-02-22
-PKG_SOURCE_VERSION:=a2a0b89b6c8c612dca5ed9ed8a68db8a07f68bc0
-PKG_MIRROR_HASH:=39f15e5f8fac02026065b6747b355b93f4e06202783ae448c43607763211597c
+PKG_SOURCE_DATE:=2025-12-30
+PKG_SOURCE_VERSION:=ecb4fcbe954edf38b3ae037d5de6d9f5bccf81f4
+PKG_MIRROR_HASH:=2711996a62d6a67948a3a4e8acc7b8e928a83b4612de983ff2448e509c794180
 
 PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
@@ -66,6 +66,7 @@ endef
 define Trusted-Firmware-A/rk3506
   BUILD_SUBTARGET:=rk3506
   NAME:=Rockchip RK3506 SoCs
+  TOS:=rk35/rk3506_tee_v2.40.bin
   TPL:=rk35/rk3506_ddr_750MHz_v1.06.bin
 endef
 
@@ -112,17 +113,25 @@ endif
 
 ifeq ($(BUILD_VARIANT),rk3506)
   TPL_FILE:=rk3506_ddr_750MHz_v1.06.bin
+  TOS_FILE:=rk3506_tee_v2.40.bin
   define Download/rk3506-tpl
     FILE:=$(TPL_FILE)
     URL:=https://github.com/rockchip-linux/rkbin/raw/master/bin/rk35/
     HASH:=394172ce23b8f3b966a03a296a7c86d616e1463b781f44901c16f8faa8f6ca64
   endef
+  define Download/rk3506-tos
+    FILE:=$(TOS_FILE)
+    URL:=https://github.com/rockchip-linux/rkbin/raw/master/bin/rk35/
+    HASH:=e2a712a5330df72daa4e5c8900e98aa85e0880d0cc0e551f1fb18eb27488da2d
+  endef
 
   define Build/Prepare
 	$(eval $(call Download,rk3506-tpl))
+	$(eval $(call Download,rk3506-tos))
 	$(call Build/Prepare/Default)
 
 	$(CP) $(DL_DIR)/$(TPL_FILE) $(PKG_BUILD_DIR)/bin/rk35/
+	$(CP) $(DL_DIR)/$(TOS_FILE) $(PKG_BUILD_DIR)/bin/rk35/
   endef
 endif
 
@@ -134,6 +143,9 @@ define Package/trusted-firmware-a/install
 
 ifneq ($(ATF),)
 	$(CP) $(PKG_BUILD_DIR)/bin/$(ATF) $(STAGING_DIR_IMAGE)/
+endif
+ifneq ($(TOS),)
+	$(CP) $(PKG_BUILD_DIR)/bin/$(TOS) $(STAGING_DIR_IMAGE)/
 endif
 ifneq ($(TPL),)
 	$(CP) $(PKG_BUILD_DIR)/bin/$(TPL) $(STAGING_DIR_IMAGE)/

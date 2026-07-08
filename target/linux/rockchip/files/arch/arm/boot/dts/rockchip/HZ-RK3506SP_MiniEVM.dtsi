@@ -27,11 +27,25 @@
 		stdout-path = &uart0;
 	};
 
-	/delete-node/ psci;
-
 	memory@0 {
 		device_type = "memory";
-		reg = <0x00200000 0x1fe00000>;
+		reg = <0x0 0x20000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		/* OP-TEE / trust resident memory.
+		 * The SPL/loader pins OP-TEE in low DRAM [0x0, ~0x62000).
+		 * Without this carve-out the kernel adds those pages to the
+		 * free pool and hands them to user space; the secure world
+		 * then rejects the access as a precise external abort.
+		 * Mirrors the vendor rk3506 DT's trust@0 reservation. */
+		trust@0 {
+			reg = <0x0 0x62000>;
+		};
 	};
 
 	vcc12v_dc: vcc12v-dc {
@@ -128,32 +142,21 @@
 		};
 	};
 
-	sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,name = "rockchip-es8388";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,mclk-fs = <256>;
-		simple-audio-card,cpu {
-			sound-dai = <&sai1>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&es8388_1>;
-		};
-	};
 };
 
+/* CPU operating points (OPP).
+ * Without an OPP table the cpufreq-dt driver has no valid frequency
+ * targets; ondemand may attempt to scale the PVTPLL to an undefined
+ * rate and hang the system.  These are conservative, clk-only points.
+ * If a PMIC-based cpu-supply is added later, append voltage columns. */
 &cpu0 {
-	/delete-property/ enable-method;
-};
-
-&cpu1 {
-	status = "disabled";
-	/delete-property/ enable-method;
-};
-
-&cpu2 {
-	status = "disabled";
-	/delete-property/ enable-method;
+	operating-points = <
+		1200000	0	/* 1.2 GHz (stock boot speed) */
+		1008000	0	/* 1.008 GHz */
+		816000	0	/* 816 MHz */
+		600000	0	/* 600 MHz */
+		408000	0	/* 408 MHz */
+	>;
 };
 
 &uart0 {
@@ -180,18 +183,7 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&rm_io4_i2c2_scl &rm_io5_i2c2_sda>;
-	es8388_1: es8388@11 {
-		status = "okay";
-		#sound-dai-cells = <0>;
-		compatible = "everest,es8388", "everest,es8323";
-		reg = <0x11>;
-		clocks = <&cru MCLK_OUT_SAI1>;
-		clock-names = "mclk";
-		assigned-clocks = <&cru MCLK_SAI1>;
-		assigned-clock-rates = <12288000>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&rm_io8_sai1_mclk>;
-	};
+
 	lt8912b: lt8912b@48 {
 		compatible = "lontium,lt8912b-hdmi";
 		reg = <0x48>;
@@ -201,7 +193,7 @@
 };
 
 &sai1 {
-	status = "okay";
+	status = "disabled";
 };
 
 &spi0 {
