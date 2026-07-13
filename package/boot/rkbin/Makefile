@@ -68,6 +68,12 @@ define Trusted-Firmware-A/rk3506
   NAME:=Rockchip RK3506 SoCs
   TOS:=rk35/rk3506_tee_v2.40.bin
   TPL:=rk35/rk3506_ddr_750MHz_v1.06.bin
+  # rkbin prebuilt SPL (v1.12) — the known-good reference that correctly
+  # enters OP-TEE for PSCI / secondary-CPU bringup. The U-Boot-self-built SPL
+  # (SPL_OPTEE path) loads OP-TEE but fails PSCI on RK3506; the rkbin SPL is
+  # the proven chain (rk-forge boots all 3 Cortex-A7 cores with it). Consumed
+  # by uboot-rk35xx as the idbloader FlashBoot.
+  SPL:=rk35/rk3506_spl_v1.12.bin
 endef
 
 TFA_TARGETS:= \
@@ -114,6 +120,7 @@ endif
 ifeq ($(BUILD_VARIANT),rk3506)
   TPL_FILE:=rk3506_ddr_750MHz_v1.06.bin
   TOS_FILE:=rk3506_tee_v2.40.bin
+  SPL_FILE:=rk3506_spl_v1.12.bin
   define Download/rk3506-tpl
     FILE:=$(TPL_FILE)
     URL:=https://github.com/rockchip-linux/rkbin/raw/master/bin/rk35/
@@ -124,14 +131,21 @@ ifeq ($(BUILD_VARIANT),rk3506)
     URL:=https://github.com/rockchip-linux/rkbin/raw/master/bin/rk35/
     HASH:=e2a712a5330df72daa4e5c8900e98aa85e0880d0cc0e551f1fb18eb27488da2d
   endef
+  define Download/rk3506-spl
+    FILE:=$(SPL_FILE)
+    URL:=https://github.com/rockchip-linux/rkbin/raw/master/bin/rk35/
+    HASH:=d1d14e45cec200366d184be1be20cd58e820e5c6799f25b2e2b3994cff145514
+  endef
 
   define Build/Prepare
 	$(eval $(call Download,rk3506-tpl))
 	$(eval $(call Download,rk3506-tos))
+	$(eval $(call Download,rk3506-spl))
 	$(call Build/Prepare/Default)
 
 	$(CP) $(DL_DIR)/$(TPL_FILE) $(PKG_BUILD_DIR)/bin/rk35/
 	$(CP) $(DL_DIR)/$(TOS_FILE) $(PKG_BUILD_DIR)/bin/rk35/
+	$(CP) $(DL_DIR)/$(SPL_FILE) $(PKG_BUILD_DIR)/bin/rk35/
   endef
 endif
 
@@ -149,6 +163,9 @@ ifneq ($(TOS),)
 endif
 ifneq ($(TPL),)
 	$(CP) $(PKG_BUILD_DIR)/bin/$(TPL) $(STAGING_DIR_IMAGE)/
+endif
+ifneq ($(SPL),)
+	$(CP) $(PKG_BUILD_DIR)/bin/$(SPL) $(STAGING_DIR_IMAGE)/
 endif
 endef
 

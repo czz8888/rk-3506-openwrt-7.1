@@ -65,6 +65,9 @@ define U-Boot/evb-rk3506
   DEPENDS:=+PACKAGE_u-boot-evb-rk3506:trusted-firmware-a-rk3506
   TOS:=rk3506_tee_v2.40.bin
   DDR:=rk3506_ddr_750MHz_v1.06.bin
+  # rkbin prebuilt SPL (installed to STAGING_DIR_IMAGE by trusted-firmware-a-rk3506)
+  # used as the idbloader FlashBoot — see package/boot/rkbin for why.
+  SPL:=rk3506_spl_v1.12.bin
   UBOOT_CONFIG:=rk3506
   SOC:=rk3506
 endef
@@ -132,8 +135,17 @@ endef
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(STAGING_DIR_IMAGE)
+	# idbloader = rkbin DDR (TPL) + rkbin prebuilt SPL (FlashBoot).
+	# Use the rkbin prebuilt SPL ($(SPL), installed by trusted-firmware-a-rk3506)
+	# instead of the U-Boot-self-built spl/u-boot-spl.bin: the U-Boot SPL's
+	# SPL_OPTEE path loads OP-TEE but fails PSCI/secondary-CPU bringup on
+	# RK3506, while the rkbin SPL correctly enters OP-TEE for PSCI (proven by
+	# rk-forge, which boots all 3 Cortex-A7 cores). The FIT (u-boot.itb) is
+	# unchanged — radxa make_fit_optee.sh already emits firmware=optee;
+	# loadables=uboot, which the rkbin SPL consumes. The V2-header SPL load
+	# address patched below (0x03f00000) matches the rkbin SPL's LOAD_ADDR.
 	$(PKG_BUILD_DIR)/tools/mkimage -n $(SOC) -T rksd -d \
-		$(STAGING_DIR_IMAGE)/$(DDR):$(PKG_BUILD_DIR)/spl/u-boot-spl.bin $(PKG_BUILD_DIR)/idbloader.img
+		$(STAGING_DIR_IMAGE)/$(DDR):$(STAGING_DIR_IMAGE)/$(SPL) $(PKG_BUILD_DIR)/idbloader.img
 	# RK3506: fix SPL load address in V2 idbloader header
 	# mkimage hardcodes images[1].address=0xFFFFFFFF but RK3506 BootROM
 	# requires the actual CONFIG_SPL_TEXT_BASE (0x03f00000) to load SPL.
