@@ -1,0 +1,36 @@
+From: CharlieChen114514 <725610365@qq.com>
+Date: Tue, 14 Jul 2026 12:00:00 +0800
+Subject: [PATCH] ARM: rockchip: bump TEXT_OFFSET to 0x208000 to avoid OP-TEE
+ memory conflict
+
+The vendor SPL places OP-TEE at DRAM base 0x1000, occupying 0x0-0x62000.
+The default ARM TEXT_OFFSET=0x8000 causes zImage (CONFIG_AUTO_ZRELADDR)
+to decompress the kernel to (RAM base + TEXT_OFFSET) = 0x8000, which is
+inside the OP-TEE secure region, causing a silent hang before any serial
+output.
+
+Add a CONFIG_ARCH_ROCKCHIP conditional to raise TEXT_OFFSET to 0x208000,
+placing the kernel above the secure monitor and its DRAM firewall granule while preserving the ARM kernel
+requirement that KERNEL_RAM_VADDR has low 16 bits equal to 0x8000.
+PHYS_OFFSET stays at 0 and other ARM platforms are unaffected.
+
+Signed-off-by: CharlieChen114514 <725610365@qq.com>
+---
+ arch/arm/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index 4aaec95e0..d4a300c3a 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -160,6 +160,8 @@
+ textofs-y	:= 0x00008000
+ # RTD1195 has Boot ROM at start of address space
+ textofs-$(CONFIG_ARCH_REALTEK)  := 0x00108000
++# RK3506: leave the first 2 MiB to OP-TEE and its secure DRAM firewall.
++textofs-$(CONFIG_ARCH_ROCKCHIP) := 0x00208000
+ # SA1111 DMA bug: we don't want the kernel to live in precious DMA-able memory
+ ifeq ($(CONFIG_ARCH_SA1100),y)
+ textofs-$(CONFIG_SA1111) := 0x00208000
+-- 
+2.43.0

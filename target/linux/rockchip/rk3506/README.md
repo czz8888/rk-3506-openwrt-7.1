@@ -35,8 +35,8 @@
 - `target/linux/rockchip/Makefile` - 仅保留 rk3506 子目标
 
 ### 2. 内核配置
-- `target/linux/rockchip/rk3506/config-6.1` - 内核配置，集成了 rk-forge 项目的配置片段
-- `patches-6.1/` - RK3506 内核补丁（来源：rk-forge 项目，需验证完整性）
+- `target/linux/rockchip/rk3506/config-7.1` - 内核配置（基于 rk-forge linux-stable v7.1）
+- `patches-7.1/` - RK3506 内核补丁（基于 rk-forge linux-stable v7.1）
 
 ### 3. U-Boot 支持
 - `package/boot/uboot-rk35xx/Makefile` - 添加 evb-rk3506 变体（32位，无 ATF）
@@ -53,36 +53,30 @@
 
 ### 6. DTS 文件
 - `target/linux/rockchip/files/arch/arm/boot/dts/` - RK3506 基础 DTS 文件
-- `target/linux/rockchip/patches-6.1/900-arm-dts-add-rk3506-targets.patch` - DTS Makefile 补丁
+- `target/linux/rockchip/patches-7.1/0001-ARM-dts-rockchip-rk3506b-aes-SFC-W25N04KV-SPI-NAND-R.patch` - RK3506 SoC DTSI + SFC 支持（创建 rk3506.dtsi）
 
 ## 已知问题和待办事项
 
 ### 🔴 高优先级
 
-**1. 重新生成并验证内核补丁**
+**1. 修复：内核早期启动卡死**
 
-RK3506 的支持代码在主线内核 6.1 中**不存在**，当前补丁来自 rk-forge 项目的初步提取，
-需要从 Ubuntu SDK 内核重新生成完整补丁：
+**现象**：`Starting kernel ...` 后串口完全静默，kernel 在 `memblock_free_all()` 时报
+`Bad page state pfn:0631e`（物理地址 ≈ 99 MiB）Oops 死掉，但因 earlycon 未生效看不到输出。
 
-```bash
-# 1. 获取主线内核 6.1.118
-wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.118.tar.xz
-tar xf linux-6.1.118.tar.xz
+**根因与验证状态**：
+- 旧版 U-Boot 的 display fixup 在显示缓冲未初始化时 `memory_start=0`；添加
+  `rockchip,fb-logo` 占位节点会错误预留 `[0, 32 MiB)`，因此不能把该节点作为修复。
+- 最新日志已打印 `Uncompressing Linux...`，证明 zImage 入口和 DEBUG_LL 正常；停点位于
+  解压器首次向低 DRAM 输出内核的阶段，优先验证 OP-TEE 安全内存硬件粒度。
+- Kernel config 缺少 `CONFIG_SERIAL_EARLYCON` 和 `CONFIG_EARLY_PRINTK`，
+  Oops 信息无法通过 earlycon 输出，造成「串口空白」假象。
 
-# 2. 对比 Ubuntu SDK 内核与主线，生成补丁
-# 重点关注以下目录的差异：
-#   - arch/arm/boot/dts/rk3506*
-#   - arch/arm/mach-rockchip/
-#   - drivers/clk/rockchip/
-#   - drivers/gpu/drm/rockchip/
-#   - drivers/pinctrl/
-#   - drivers/net/ethernet/stmicro/stmmac/
-#   - drivers/phy/rockchip/
-#   - drivers/mmc/host/dw_mmc-rockchip*
-#   - include/dt-bindings/
-
-# 3. 将生成的补丁放入 target/linux/rockchip/patches-6.1/
-```
+**修复状态**：
+- ✅ 删除会造成 `[0, 32 MiB)` 错误预留的 `rockchip,fb-logo` 空壳节点
+- ✅ 内核解压地址提升至 `0x00208000`，低 2 MiB 保留给 OP-TEE/安全防火墙
+- ✅ `CONFIG_SERIAL_EARLYCON=y`、`CONFIG_EARLY_PRINTK=y` 已进入最终内核配置
+- ⏳ 需重编烧录验证，进 U-Boot 执行 `md 0x0631e000` 确认 logo 数据
 
 **2. 验证系统启动**
 

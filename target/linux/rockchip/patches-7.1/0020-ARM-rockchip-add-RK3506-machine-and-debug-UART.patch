@@ -1,0 +1,78 @@
+From: CharlieChen114514 <725610365@qq.com>
+Date: Tue, 14 Jul 2026 16:00:00 +0800
+Subject: [PATCH] ARM: rockchip: add RK3506 machine and debug UART
+
+Add RK3506 to the Rockchip machine descriptor compatibility table so the
+kernel uses the Rockchip platform callbacks rather than the generic fallback.
+
+Also add a DEBUG_LL selection for the RK3506 UART0.  The UART is a 32-bit
+DesignWare 8250 instance at 0xff0a0000 with a register shift of two.  This is
+needed to diagnose failures before the normal and earlycon consoles become
+available.
+
+Signed-off-by: CharlieChen114514 <725610365@qq.com>
+---
+ arch/arm/Kconfig.debug            | 12 +++++++++++-
+ arch/arm/mach-rockchip/rockchip.c |  1 +
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+--- a/arch/arm/Kconfig.debug
++++ b/arch/arm/Kconfig.debug
+@@ -823,6 +823,14 @@ choice
+ 		  Say Y here if you want kernel low-level debugging support
+ 		  on RealView based platforms.
+ 
++	config DEBUG_RK3506_UART0
++		bool "Kernel low-level debugging messages via Rockchip RK3506 UART0"
++		depends on ARCH_ROCKCHIP
++		select DEBUG_UART_8250
++		help
++		  Say Y here to route low-level kernel debugging messages to
++		  the 32-bit DesignWare 8250 UART0 on Rockchip RK3506.
++
+ 	config DEBUG_RV1108_UART0
+ 		bool "Kernel low-level debugging messages via Rockchip RV1108 UART0"
+ 		depends on ARCH_ROCKCHIP
+@@ -1549,5 +1557,6 @@ config DEBUG_UART_8250
+ config DEBUG_UART_PHYS
+ 	hex "Physical base address of debug UART"
++	default 0xff0a0000 if DEBUG_RK3506_UART0
+ 	default 0x01c28000 if DEBUG_SUNXI_UART0
+ 	default 0x01c28400 if DEBUG_SUNXI_UART1
+ 	default 0x01d0c000 if DEBUG_DAVINCI_DA8XX_UART1
+@@ -1678,5 +1687,6 @@ config DEBUG_UART_PHYS
+ config DEBUG_UART_VIRT
+ 	hex "Virtual base address of debug UART"
++	default 0xf00a0000 if DEBUG_RK3506_UART0
+ 	default 0xc881f000 if DEBUG_RV1108_UART2
+ 	default 0xc8821000 if DEBUG_RV1108_UART1
+ 	default 0xc8912000 if DEBUG_RV1108_UART0
+@@ -1802,6 +1812,7 @@ config DEBUG_UART_8250_WORD
+ 		DEBUG_DAVINCI_DA8XX_UART1 || DEBUG_DAVINCI_DA8XX_UART2 || \
+ 		DEBUG_BCM_IPROC_UART3 || DEBUG_BCM_KONA_UART || \
+ 		DEBUG_RK32_UART2
++	default y if DEBUG_RK3506_UART0
+ 
+ config DEBUG_UART_8250_PALMCHIP
+ 	bool "8250 UART is Palmchip BK-310x"
+@@ -1818,7 +1829,7 @@ config DEBUG_UART_8250_PALMCHIP
+ 
+ config DEBUG_UNCOMPRESS
+ 	bool "Enable decompressor debugging via DEBUG_LL output"
+-	depends on !ARCH_MULTIPLATFORM
++	depends on !ARCH_MULTIPLATFORM || DEBUG_RK3506_UART0
+ 	depends on !(ARCH_FOOTBRIDGE || ARCH_RPC || ARCH_SA1100)
+ 	depends on DEBUG_LL && !DEBUG_OMAP2PLUS_UART && \
+ 		     (!DEBUG_TEGRA_UART || !ZBOOT_ROM) && \
+--- a/arch/arm/mach-rockchip/rockchip.c
++++ b/arch/arm/mach-rockchip/rockchip.c
+@@ -56,6 +56,7 @@ static const char * const rockchip_board
+ 	"rockchip,rk3066a",
+ 	"rockchip,rk3066b",
+ 	"rockchip,rk3188",
++	"rockchip,rk3506",
+ 	"rockchip,rk3228",
+ 	"rockchip,rk3288",
+ 	"rockchip,rv1108",
+-- 
+2.43.0

@@ -1,6 +1,8 @@
+setenv kernel_addr_r 0x04000000
+
 part uuid mmc ${devnum}:2 uuid
 
-setenv bootargs "console=ttyS0,1500000 earlycon=uart8250,mmio32,0xff0a0000 earlyprintk loglevel=8 ignore_loglevel root=PARTUUID=${uuid} rw rootwait"
+setenv bootargs "console=ttyS0,1500000 earlycon=uart8250,mmio32,0xff0a0000 earlyprintk loglevel=8 ignore_loglevel maxcpus=1 nosmp root=PARTUUID=${uuid} rw rootwait"
 
 # --- RK3506 boot-memory diagnostics -------------------------------------
 # The kernel dies with a "Bad page state ... pfn:0631e" Oops during

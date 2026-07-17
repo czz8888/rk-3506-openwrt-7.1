@@ -16,3 +16,5 @@
 0016-wifi-rtl8733bu-wire-realtek.patch
 0017-ARM-dts-rockchip-rk3506-add-uart1-uart3-HZHY-RMIO-pi.patch
 0018-ARM-dts-rockchip-Makefile-add-HZHY-MiniEVM-DTS.patch
+0019-ARM-bump-TEXT_OFFSET-to-0x80000-OP-TEE-conflict.patch
+0020-ARM-rockchip-add-RK3506-machine-and-debug-UART.patch

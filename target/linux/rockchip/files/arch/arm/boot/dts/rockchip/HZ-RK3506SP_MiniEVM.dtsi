@@ -12,6 +12,13 @@
 	model = "HZ-RK3506SP_MiniEVM";
 	compatible = "rockchip,rk3506-evb1-v10", "rockchip,rk3506";
 
+	/* The vendor OP-TEE/secure monitor does not implement the PSCI 1.0
+	 * SMC interface advertised by the initial rk3506.dtsi. Linux probes
+	 * PSCI_VERSION (SMC 0x84000000) during setup_arch() and never returns.
+	 * Boot as a single-core system until a matching secure firmware or a
+	 * native RK3506 SMP enable method is available. */
+	/delete-node/ psci;
+
 	aliases {
 		serial0 = &uart0;
 		serial1 = &uart1;
@@ -44,7 +51,10 @@
 		 * then rejects the access as a precise external abort.
 		 * Mirrors the vendor rk3506 DT's trust@0 reservation. */
 		trust@0 {
-			reg = <0x0 0x62000>;
+			/* OP-TEE reports 0x62000 bytes, but the secure DRAM firewall may
+			 * protect low memory at a coarser granularity.  Keep Linux and the
+			 * zImage output above the first 2 MiB. */
+			reg = <0x0 0x200000>;
 		};
 	};
 
@@ -150,6 +160,7 @@
  * rate and hang the system.  These are conservative, clk-only points.
  * If a PMIC-based cpu-supply is added later, append voltage columns. */
 &cpu0 {
+	/delete-property/ enable-method;
 	operating-points = <
 		1200000	0	/* 1.2 GHz (stock boot speed) */
 		1008000	0	/* 1.008 GHz */
@@ -157,6 +168,16 @@
 		600000	0	/* 600 MHz */
 		408000	0	/* 408 MHz */
 	>;
+};
+
+&cpu1 {
+	/delete-property/ enable-method;
+	status = "disabled";
+};
+
+&cpu2 {
+	/delete-property/ enable-method;
+	status = "disabled";
 };
 
 &uart0 {
