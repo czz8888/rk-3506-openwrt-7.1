@@ -885,6 +885,7 @@ if KERNEL_CGROUPS
 
 	config KERNEL_MEMCG
 		bool "Memory Resource Controller for Control Groups"
+		default n if TARGET_rockchip_rk3506
 		default y
 		select KERNEL_FREEZER
 		depends on KERNEL_RESOURCE_COUNTERS

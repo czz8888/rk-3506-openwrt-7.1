@@ -1,0 +1,44 @@
+From: CharlieChen114514 <725610365@qq.com>
+Date: Thu, 17 Jul 2026 03:00:00 +0000
+Subject: [PATCH] ARM: dts: rockchip: rk3506: fix MDIO -EBUSY by dropping
+ snps,dwmac-mdio compatible from mdio nodes
+
+The stmmac platform driver already creates and registers an MDIO bus
+internally in stmmac_mdio_register().  When the mdio child node carries
+compatible = "snps,dwmac-mdio", the kernel's of_platform_populate()
+also spawns a separate platform device for the node.  Both code paths
+try to register a bus with the same ID and the second one fails:
+
+  rk_gmac-dwmac ff4c8000.ethernet: error -EBUSY: Cannot register the MDIO bus
+  rk_gmac-dwmac ff4c8000.ethernet: error -EBUSY: MDIO bus (id: 0) registration failed
+
+Drop the explicit compatible so that stmmac uses the mdio child node
+only as a container for PHY discovery (of_mdiobus_register) without
+triggering a duplicate platform-device probe.
+
+The #address-cells / #size-cells remain because they are still needed
+for the PHY sub-nodes.
+
+Signed-off-by: CharlieChen114514 <725610365@qq.com>
+---
+ arch/arm/boot/dts/rockchip/rk3506.dtsi | 2 --
+ 1 file changed, 2 deletions(-)
+
+--- a/arch/arm/boot/dts/rockchip/rk3506.dtsi
++++ b/arch/arm/boot/dts/rockchip/rk3506.dtsi
+@@ -314,7 +314,6 @@
+ 		status = "disabled";
+ 
+ 		mdio0: mdio {
+-			compatible = "snps,dwmac-mdio";
+ 			#address-cells = <0x1>;
+ 			#size-cells = <0x0>;
+ 		};
+@@ -368,7 +367,6 @@
+ 		status = "disabled";
+ 
+ 		mdio1: mdio {
+-			compatible = "snps,dwmac-mdio";
+ 			#address-cells = <0x1>;
+ 			#size-cells = <0x0>;
+ 		};

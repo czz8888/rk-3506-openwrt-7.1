@@ -1,0 +1,127 @@
+From: CharlieChen114514 <725610365@qq.com>
+Date: Thu, 17 Jul 2026 03:10:00 +0000
+Subject: [PATCH] ARM: rockchip: rk3506: add SMP coherency diagnostic and SCU init
+
+Add a run-time diagnostic that reads ACTLR, NSACR and the SCU enable
+status on the boot CPU.  This helps identify whether the Cortex-A7
+coherency fabric is properly configured for SMP operation.
+
+With OP-TEE PSCI, the secure firmware must set NSACR.NS_SMP=1 so the
+non-secure kernel can write ACTLR.SMP.  If NSACR.NS_SMP is not set,
+ACTLR.SMP silently stays 0 and SMP cache coherency is broken, leading
+to random memory corruption and panics.
+
+The patch also attempts to enable the SCU via PERIPHBASE if it is
+found disabled, and reads back the register to confirm.
+
+Signed-off-by: CharlieChen114514 <725610365@qq.com>
+---
+ arch/arm/mach-rockchip/rockchip.c | 97 ++++++++++++++++++++++++++++++-
+ 1 file changed, 96 insertions(+), 1 deletion(-)
+
+--- a/arch/arm/mach-rockchip/rockchip.c
++++ b/arch/arm/mach-rockchip/rockchip.c
+@@ -12,6 +12,7 @@
+ #include <linux/of.h>
+ #include <linux/of_clk.h>
+ #include <linux/clocksource.h>
++#include <linux/smp.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include "core.h"
+@@ -44,7 +45,101 @@ static void __init rockchip_timer_init(v
+ 	timer_probe();
+ }
+ 
+-static void __init rockchip_dt_init(void)
+-{
+-	rockchip_suspend_init();
+-}
++#ifdef CONFIG_SMP
++#define SCU_CTRL		0x00
++#define SCU_CTRL_ENABLE		BIT(0)
++#define SCU_CTRL_NCPU_SHIFT	4
++#define SCU_CTRL_NCPU_MASK	GENMASK(5, 4)
++
++#define ACTLR_SMP		BIT(6)
++#define NSACR_NS_SMP		BIT(18)
++
++static phys_addr_t __init rockchip_read_periphbase(void)
++{
++	u32 periphbase;
++
++	asm volatile("mrc p15, 4, %0, c15, c0, 0" : "=r"(periphbase));
++	return (phys_addr_t)(periphbase & 0xffffe000);
++}
++
++static void __init rockchip_smp_check_coherency(void)
++{
++	u32 actlr, nsacr;
++	phys_addr_t periphbase;
++	void __iomem *scu_base;
++	u32 scu_ctrl;
++	int ncpu;
++	unsigned long flags;
++
++	/* Read ACTLR and NSACR for diagnostics */
++	asm volatile("mrc p15, 0, %0, c1, c0, 1" : "=r"(actlr));
++	asm volatile("mrc p15, 0, %0, c1, c1, 2" : "=r"(nsacr));
++
++	pr_info("rk3506: ACTLR=0x%08x SMP=%s  NSACR=0x%08x NS_SMP=%s\n",
++		actlr, (actlr & ACTLR_SMP) ? "YES" : "NO",
++		nsacr, (nsacr & NSACR_NS_SMP) ? "YES" : "NO");
++
++	if (!(actlr & ACTLR_SMP)) {
++		if (!(nsacr & NSACR_NS_SMP))
++			pr_warn("rk3506: NSACR.NS_SMP not set."
++				" OP-TEE must set NSACR.NS_SMP=1"
++				" for each CPU else SMP coherency"
++				" is broken.\n");
++		else
++			pr_warn("rk3506: NSACR set but ACTLR.SMP"
++				" still 0 - unexpected.\n");
++	} else {
++		pr_info("rk3506: ACTLR.SMP correctly set.\n");
++	}
++
++	/* Check and enable SCU via PERIPHBASE */
++	periphbase = rockchip_read_periphbase();
++	if (periphbase) {
++		scu_base = ioremap(periphbase, SZ_4K);
++		if (scu_base) {
++			scu_ctrl = readl_relaxed(scu_base + SCU_CTRL);
++			ncpu = (scu_ctrl & SCU_CTRL_NCPU_MASK)
++			       >> SCU_CTRL_NCPU_SHIFT;
++			pr_info("rk3506: SCU@0x%pa ctrl=0x%08x en=%d"
++				" ncpu=%d\n", &periphbase, scu_ctrl,
++				!!(scu_ctrl & SCU_CTRL_ENABLE),
++				ncpu ? ncpu : 1);
++
++			if (!(scu_ctrl & SCU_CTRL_ENABLE)) {
++				pr_warn("rk3506: SCU disabled,"
++					" enabling.\n");
++				local_irq_save(flags);
++				writel_relaxed(scu_ctrl | SCU_CTRL_ENABLE,
++					       scu_base + SCU_CTRL);
++				mb();
++				local_irq_restore(flags);
++			}
++			iounmap(scu_base);
++		}
++	}
++}
++
++static void __init rockchip_dt_init(void)
++{
++	rockchip_smp_check_coherency();
++	rockchip_suspend_init();
++}
++#else
++static void __init rockchip_dt_init(void)
++{
++	rockchip_suspend_init();
++}
++#endif
+ 
+ static const char * const rockchip_board_dt_compat[] = {
+ 	"rockchip,rk2928",
