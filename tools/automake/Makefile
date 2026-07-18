@@ -26,6 +26,16 @@ HOST_CONFIGURE_VARS += \
 
 define Host/Configure
 	(cd $(HOST_BUILD_DIR); $(AM_TOOL_PATHS) STAGING_DIR_HOST="" ./bootstrap)
+	# automake 1.16.5's bootstrap can leave generated files (aclocal.m4, Makefile.in,
+	# ...) whose regeneration calls the not-yet-built aclocal-1.16 / automake-1.16
+	# binaries. On fast hosts a sub-second mtime race makes `make` try to
+	# regenerate them and abort. Touch the generated autotools files after
+	# bootstrap so they are newer than their prerequisites (touch stamps files in
+	# argument order, so aclocal.m4 goes LAST to be strictly newest). Note: on
+	# hosts with aggressive clock skew (e.g. WSL2) the race can still surface via
+	# a different generated file — a `make -j1` retry or touching the whole build
+	# dir (NOT future-dated, that breaks configure's sanity check) resolves it.
+	(cd $(HOST_BUILD_DIR); touch m4/amversion.m4 configure Makefile.in && touch aclocal.m4)
 	$(call Host/Configure/Default)
 endef
 

@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 HZHY Electronics Co., Ltd.
+ * HZ-RK3506SP MiniEVM — SD card boot variant (kernel + rootfs from SD).
+ */
+
+/dts-v1/;
+#include "HZ-RK3506SP_MiniEVM.dtsi"
+
+/ {
+	model = "HZ-RK3506SP_MiniEVM SD";
+	compatible = "rockchip,rk3506-evb1-v10", "rockchip,rk3506";
+	chosen {
+		/* rootfs on SD partition 2 (squashfs). The vendor U-Boot 2017.09 does
+		 * NOT propagate env bootargs into the kernel DT /chosen, so the
+		 * bootscript's `setenv bootargs root=PARTUUID=...` is ignored — root
+		 * must live here, not in bootscript. */
+		bootargs = "earlycon=uart8250,mmio32,0xff0a0000 console=ttyS0,1500000 root=/dev/mmcblk0p2 rootfstype=squashfs rootwait net.ifnames=0";
+	};
+	/delete-node/ sdio-pwrseq;
+	vcc_3v3: vcc-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_3v3";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vcc_sys>;
+	};
+	/* vccio_sd (SD signaling voltage / vqmmc): fixed always-on 3.3V. The HZHY
+	 * dts had a regulator-gpio defaulting to 1.8V (gpios-states=<0> -> the
+	 * 1800000 state), which starves SD init — SD negotiates at 3.3V before any
+	 * UHS switch. rk-forge proved fixed-3.3V works on this board
+	 * (patches/linux/0005-...-MMC-SD-SPI0.patch). */
+	vccio_sd: vccio-sd-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vccio_sd";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};
+
+&sfc {
+	status = "okay";
+	flash@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <1>;
+	};
+};
+
+/* SD slot. The HZHY dts configured cd-gpios=<&gpio1 RK_PA3> + sd-uhs-sdr104 +
+ * 1.8V vqmmc — none of which match THIS board: rk-forge proved the SD CD is on
+ * gpio0_A2 and the card runs 3.3V-only (patches/linux/0005). Result with the
+ * HZHY config: dwmmc_rockchip probed (bound, got CD GPIO, bus=400kHz) but never
+ * detected the card -> no mmcblk0 -> rootwait spun forever (log
+ * uart_20260719_0007). Rather than chase the CD pin, use broken-cd (driver
+ * polls the card, no CD gpio needed) + no-1-8-v + fixed-3.3V vqmmc. The sdmmc
+ * clk/cmd/bus4 data pins come from the base dtsi and already probe fine. */
+&mmc {
+	/delete-property/ no-sd;
+	/delete-property/ ignore-pm-notify;
+	/delete-property/ keep-power-in-suspend;
+	/delete-property/ non-removable;
+	/delete-property/ mmc-pwrseq;
+	cap-sd-highspeed;
+	bus-width = <4>;
+	no-sdio;
+	no-mmc;
+	no-1-8-v;
+	broken-cd;
+	disable-wp;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc_clk_pins &sdmmc_cmd_pins &sdmmc_bus4_pins>;
+	vmmc-supply = <&vcc_3v3>;
+	vqmmc-supply = <&vccio_sd>;
+	status = "okay";
+};
