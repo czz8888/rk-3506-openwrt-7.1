@@ -72,9 +72,12 @@ define U-Boot/evb-rk3506
   SOC:=rk3506
 endef
 
+# Locally limited to the 32-bit rk3506 variant. The evb-rk3528 / evb-rk3576
+# variants are ARM64 and cannot build with this target's 32-bit ARM toolchain
+# (cc1: error: unknown register name: x18). Main builds all three
+# unconditionally — flag to friend (gate ARM64 variants on an aarch64 toolchain
+# or skip them for the 32-bit rk3506 target).
 UBOOT_TARGETS := \
-  evb-rk3528 \
-  evb-rk3576 \
   evb-rk3506
 
 UBOOT_CONFIGURE_VARS += USE_PRIVATE_LIBGCC=yes

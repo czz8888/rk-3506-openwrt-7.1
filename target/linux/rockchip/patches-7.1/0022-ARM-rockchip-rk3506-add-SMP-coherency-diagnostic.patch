@@ -29,7 +29,7 @@ Signed-off-by: CharlieChen114514 <725610365@qq.com>
  #include <asm/mach/arch.h>
  #include <asm/mach/map.h>
  #include "core.h"
-@@ -44,7 +45,101 @@ static void __init rockchip_timer_init(v
+@@ -44,10 +45,91 @@ static void __init rockchip_timer_init(v
  	timer_probe();
  }
  
