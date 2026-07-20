@@ -43,7 +43,8 @@ define Device/hzhy_mini_evm_emmc
   DEVICE_MODEL := RK3506SP MiniEVM (eMMC)
   DEVICE_DTS := rockchip/HZ-RK3506SP_MiniEVM_EMMC
   DEVICE_PACKAGES := kmod-usb-hid kmod-usb-ohci kmod-usb2 kmod-usb-storage \
-    kmod-usb-storage-extras kmod-usb-net kmod-usb-core kmod-gpio-button-hotplug
+    kmod-usb-storage-extras kmod-usb-net kmod-usb-core kmod-gpio-button-hotplug \
+    urandom-seed
   KERNEL := kernel-bin | lzma | fit lzma $$(DTS_DIR)/$$(DEVICE_DTS).dtb
   BOOT_SCRIPT := rk3506
 endef
@@ -56,8 +57,21 @@ define Device/hzhy_mini_evm_nand
   DEVICE_DTS := rockchip/HZ-RK3506SP_MiniEVM_NAND
   DEVICE_PACKAGES := kmod-usb-hid kmod-usb-ohci kmod-usb2 kmod-usb-storage \
     kmod-usb-storage-extras kmod-usb-net kmod-usb-core kmod-gpio-button-hotplug \
-    kmod-mtd-rw
+    kmod-mtd-rw urandom-seed
   KERNEL := kernel-bin | lzma | fit lzma $$(DTS_DIR)/$$(DEVICE_DTS).dtb
   BOOT_SCRIPT := rk3506
 endef
 TARGET_DEVICES += hzhy_mini_evm_nand
+
+define Device/hzhy_mini_evm_sd
+  $(Device/rk3506)
+  DEVICE_VENDOR := HZHY
+  DEVICE_MODEL := RK3506SP MiniEVM (SD)
+  DEVICE_DTS := rockchip/HZ-RK3506SP_MiniEVM_SD
+  DEVICE_PACKAGES := kmod-usb-hid kmod-usb-ohci kmod-usb2 kmod-usb-storage \
+    kmod-usb-storage-extras kmod-usb-net kmod-usb-core kmod-gpio-button-hotplug \
+    urandom-seed
+  KERNEL := kernel-bin | lzma | fit lzma $$(DTS_DIR)/$$(DEVICE_DTS).dtb
+  BOOT_SCRIPT := rk3506
+endef
+TARGET_DEVICES += hzhy_mini_evm_sd

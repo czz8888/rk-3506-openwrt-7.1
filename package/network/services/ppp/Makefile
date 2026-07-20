@@ -40,7 +40,9 @@ CONFIGURE_ARGS += \
 	with_pam=no \
 	with_pcap=no \
 	with_srp=no \
-	with_static_pcap=yes
+	with_static_pcap=yes \
+	--disable-eaptls \
+	--disable-peap
 
 define Package/ppp/Default
   SECTION:=net

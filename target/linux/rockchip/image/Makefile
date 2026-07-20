@@ -12,7 +12,7 @@ endef
 define Image/Prepare
 	# Copy HZ DTB from KDIR (OpenWrt DTC output) to kernel DTS tree (for mkimage FIT)
 	# Runs after compile-dtb (via image_prepare: compile compile-dtb)
-	for f in HZ-RK3506SP_MiniEVM_EMMC HZ-RK3506SP_MiniEVM_NAND; do \
+	for f in HZ-RK3506SP_MiniEVM_EMMC HZ-RK3506SP_MiniEVM_NAND HZ-RK3506SP_MiniEVM_SD; do \
 		if [ -f "$(KDIR)/image-$$$$f.dtb" ]; then \
 			$(CP) "$(KDIR)/image-$$$$f.dtb" "$(DTS_DIR)/rockchip/$$$$f.dtb"; \
 		fi; \
